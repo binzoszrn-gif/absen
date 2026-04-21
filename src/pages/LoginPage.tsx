@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { UserProfile } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface LoginPageProps {
   onLogin: (user: UserProfile) => void;
@@ -15,33 +16,47 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Mock login logic
-    setTimeout(() => {
-      let mockUser: UserProfile | null = null;
+    try {
+      // 1. Sign in via Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Simple mock logic for different roles
-      if (email === 'admin@smk.id') {
-        mockUser = { uid: '1', name: 'Super Admin', email, role: 'admin', createdAt: new Date() };
-      } else if (email === 'guru@smk.id') {
-        mockUser = { uid: '2', name: 'Pak Budi', email, role: 'guru', createdAt: new Date() };
-      } else if (email === 'staf@smk.id') {
-        mockUser = { uid: '3', name: 'Siti Rahma', email, role: 'staf', createdAt: new Date() };
-      }
+      if (authError) throw authError;
 
-      if (mockUser && password === '123456') {
-        onLogin(mockUser);
-        localStorage.setItem('smk_user', JSON.stringify(mockUser));
+      if (authData.user) {
+        // 2. Ambil Profil (Role) dari tabel profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (profileError) throw new Error('Data profil tidak ditemukan. Pastikan Anda sudah menjalankan SQL di dashboard Supabase.');
+
+        const userProfile: UserProfile = {
+          uid: authData.user.id,
+          name: profileData.name,
+          email: authData.user.email || '',
+          role: profileData.role,
+          createdAt: profileData.created_at,
+        };
+
+        onLogin(userProfile);
+        localStorage.setItem('smk_user', JSON.stringify(userProfile));
         navigate('/app');
-      } else {
-        setError('Email atau password salah. Coba: admin@smk.id, guru@smk.id, atau staf@smk.id dengan pass: 123456');
       }
+    } catch (err: any) {
+      setError(err.message || 'Gagal masuk ke aplikasi');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
