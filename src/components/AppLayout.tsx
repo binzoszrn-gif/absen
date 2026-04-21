@@ -49,7 +49,7 @@ export default function AppLayout({ user, onLogout }: AppLayoutProps) {
           <div className="p-6 border-b border-gray-100 flex items-center justify-between overflow-hidden">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 bg-primary rounded-lg flex shrink-0 items-center justify-center text-white font-bold text-xl transition-all">
-                {isSidebarOpen ? user.role.charAt(0).toUpperCase() : user.role.charAt(0).toUpperCase()}
+                {user?.role?.charAt(0).toUpperCase() || 'U'}
               </div>
               {isSidebarOpen && (
                 <motion.div 
@@ -110,13 +110,13 @@ export default function AppLayout({ user, onLogout }: AppLayoutProps) {
           <div className="p-4 border-t border-gray-100">
             {isSidebarOpen ? (
               <div className="bg-primary-light p-4 rounded-xl">
-                <p className="text-[11px] font-bold text-primary uppercase mb-1 truncate tracking-tight">{user.role.toUpperCase()} ROLE</p>
-                <p className="text-[11px] text-primary/70 truncate">Logged in as: {user.name}</p>
+                <p className="text-[11px] font-bold text-primary uppercase mb-1 truncate tracking-tight">{(user?.role || 'user').toUpperCase()} ROLE</p>
+                <p className="text-[11px] text-primary/70 truncate">Logged in as: {user?.name || 'User'}</p>
               </div>
             ) : (
               <div className="flex justify-center">
                 <div className="w-10 h-10 bg-primary-light rounded-xl flex items-center justify-center text-primary font-bold text-xs">
-                  {user.name.charAt(0)}
+                  {user?.name?.charAt(0) || 'U'}
                 </div>
               </div>
             )}

@@ -22,9 +22,14 @@ export default function App() {
 
   useEffect(() => {
     // Simulated auth check
-    const savedUser = localStorage.getItem('smk_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem('smk_user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (e) {
+      console.error('Failed to parse saved user:', e);
+      localStorage.removeItem('smk_user');
     }
     setLoading(false);
   }, []);

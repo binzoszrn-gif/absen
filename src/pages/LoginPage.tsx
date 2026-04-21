@@ -57,17 +57,19 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
         const userProfile: UserProfile = {
           uid: authData.user.id,
-          name: profileData.name,
+          name: profileData?.name || 'User',
           email: authData.user.email || '',
-          role: profileData.role,
-          createdAt: profileData.created_at,
+          role: profileData?.role || 'staf',
+          createdAt: profileData?.created_at || new Date().toISOString(),
         };
 
+        console.log('Login success, user profile:', userProfile);
         onLogin(userProfile);
         localStorage.setItem('smk_user', JSON.stringify(userProfile));
         navigate('/app');
       }
     } catch (err: any) {
+      console.error('Login error details:', err);
       setError(err.message || 'Gagal masuk ke aplikasi');
     } finally {
       setLoading(false);
