@@ -21,14 +21,29 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true);
     setError('');
 
+    const trimmedEmail = email.trim();
+
     try {
+      // 0. Check Supabase Config
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        throw new Error('Konfigurasi Supabase belum lengkap. Pastikan VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY sudah diisi di menu Secrets.');
+      }
+
       // 1. Sign in via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: trimmedEmail,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message === 'Invalid login credentials') {
+          throw new Error('Email atau password salah. Pastikan juga email sudah dikonfirmasi jika fitur konfirmasi aktif.');
+        }
+        if (authError.message === 'Email not confirmed') {
+          throw new Error('Email belum dikonfirmasi. Silakan cek inbox email Anda atau matikan fiturnya di dashboard Supabase.');
+        }
+        throw authError;
+      }
 
       if (authData.user) {
         // 2. Ambil Profil (Role) dari tabel profiles
